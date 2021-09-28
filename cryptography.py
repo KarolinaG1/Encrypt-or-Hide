@@ -68,8 +68,6 @@ def decrypt_CFB(cipher, password):
 
 def encrypt_CBC(plaintext, key, im_path):
     iv = key[:16]  # random initialization vector
-    print("PLAINTEXT")
-    print(plaintext)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     img_data = cipher.encrypt(pad(plaintext, 16))
     output_path = os.path.splitext(im_path)[0]
