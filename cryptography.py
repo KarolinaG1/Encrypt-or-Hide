@@ -1,6 +1,5 @@
 import os
 import time
-
 import numpy
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
@@ -18,6 +17,7 @@ def to_bin(data):
     else:
         raise TypeError("Incorrect type!")
 
+
 def to_ascii(binary_data):
     # converting binary data to ascii representation
     data_int = int(binary_data, 2)
@@ -25,6 +25,7 @@ def to_ascii(binary_data):
     data_bytes = data_int.to_bytes(byte_nr, 'big')
     data_ascii = data_bytes.decode(encoding='utf-8')
     return data_ascii
+
 
 def get_data(image_path, password):
     # plaintext preparation
@@ -38,11 +39,14 @@ def get_data(image_path, password):
     return plaintext, key, image_path
 
 
-def encrypt_CFB(plaintext, key):
-    iv = key[:16]                           # get initialization vector
+def encrypt_CFB(plaintext, key, im_path):
+    # AES encryption process in CFB mode
+    iv = key[:16]                           # get initialization vector derived from a key
     cipher = AES.new(key, AES.MODE_CFB, iv)
     img_data = cipher.encrypt(plaintext)
-    fname = 'encoded.png'
+    output_path = os.path.splitext(im_path)[0]
+    extension = os.path.splitext(im_path)[1]
+    fname = output_path + "_en_" + time.strftime("%d-%m-%Y-%H-%M-%S") + extension
     with open(fname, 'wb') as f:
         f.write(img_data)
         f.close()
@@ -51,11 +55,12 @@ def encrypt_CFB(plaintext, key):
 
 
 def decrypt_CFB(cipher, password):
+    # AES decryption process in CFB mode
     with open(cipher, 'rb') as f:
         ciph = f.read()
         f.close()
     # Prepare data
-    salt = b'An exemplary salt'    # additional security measure for a password
+    salt = b'An exemplary salt'             # additional security measure for a password
     key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
     iv = key[:16]                           # extracting iv from the last 16 bytes of key
     decipher = AES.new(key, AES.MODE_CFB, iv)
@@ -63,7 +68,9 @@ def decrypt_CFB(cipher, password):
         recovered_data = decipher.decrypt(ciph)
     except ValueError:
         return False
-    fname = 'decrypted.png'
+    output_path = os.path.splitext(cipher)[0]
+    extension = os.path.splitext(cipher)[1]
+    fname = output_path + "_decrypted_" + extension
     with open(fname, 'wb') as f:
         try:
             f.write(recovered_data)
@@ -74,7 +81,8 @@ def decrypt_CFB(cipher, password):
 
 
 def encrypt_CBC(plaintext, key, im_path):
-    iv = key[:16]  # random initialization vector
+    # AES encryption process in CBC mode
+    iv = key[:16]                           # extracting iv from the last 16 bytes of key
     cipher = AES.new(key, AES.MODE_CBC, iv)
     img_data = cipher.encrypt(pad(plaintext, 16))
     output_path = os.path.splitext(im_path)[0]
@@ -88,6 +96,7 @@ def encrypt_CBC(plaintext, key, im_path):
 
 
 def decrypt_CBC(cipher, password):
+    # AES decryption process in CBC mode
     with open(cipher, 'rb') as f:
         ciph = f.read()
         f.close()
@@ -111,10 +120,11 @@ def decrypt_CBC(cipher, password):
             return False
         f.close()
         return fname
-    return False
 
 
 def encrypt_text(plaintext, password):
+    # AES encryption process of text in CFB mode
+
     # key preparation
     salt = b'An exemplary salt'             # additional security measure of a password
     key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
@@ -123,22 +133,18 @@ def encrypt_text(plaintext, password):
     cryptogram = cipher.encrypt(plaintext)
     return cryptogram
 
+
 def decrypt_text(cryptogram, password):
+    # AES decryption process of text in CFB mode
+
     # key preparation
     salt = b'An exemplary salt'             # additional security measure of a password
     key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
     iv = key[:16]                           # initialization vector derived from a key
     decipher = AES.new(key, AES.MODE_CFB, iv)
-    print(type(cryptogram))
-    print("szyfrogram: " + cryptogram)
-#    cryptogram = str.encode(cryptogram)
-   # print(type(cryptogram))
     try:
         cryptogram = str.encode(cryptogram, encoding="latin-1")
-        print("Po konwersji "+ str(cryptogram))
         message = decipher.decrypt(cryptogram)
-        print(type(message))
-        print("plain: " + str(message))
     except ValueError:
         return False
     return message.decode('latin-1')

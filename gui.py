@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+from tkinter import ttk
 from tkinter.ttk import *
 import steganography
 import cryptography
@@ -10,7 +11,7 @@ class EncryptOrHideApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry("580x600")
+        self.geometry("580x620")
         self.title("Encrypt or Hide")
         self.resizable(False, False)
         self.file_path1 = ''
@@ -161,38 +162,51 @@ class EncryptOrHideApp(tk.Tk):
             info["font"] = "Verdana 8 bold"
         info.config(state="disabled")
 
-    def encrypt(self, password, info, label):
+    def encrypt(self, password, info, label, mode):
         info.config(state="normal")
         info.delete('1.0', tk.END)
         self.password = str(password.get())
         if self.password is not '' and self.file_path1 is not '':
             p, k, im = cryptography.get_data(self.file_path1, self.password)
-            output = cryptography.encrypt_CBC(p, k, im)
+            if mode == 'CBC':
+                output = cryptography.encrypt_CBC(p, k, im)
+            elif mode == 'CFB':
+                output = cryptography.encrypt_CFB(p, k, im)
+            else:
+                output = False
+                text = " Choose an appropriate encryption mode"
+                info.insert(tk.END, text)
             self.password = ''
             if output is not False:
                 text = "Cryptographic process completed.\n"\
-                               + "\nThe output file: \n" + output.split("/")[-1]
+                               + "The output file: \n" + output.split("/")[-1]
                 info.insert(tk.END, text)
                 self.password = ''
                 self.file_path1 = ''
                 password.delete(0, 'end')
                 label["text"] = "No file has been chosen"
-
         else:
             text = "  Please, provide the app with an image \n and a password!"
             info.insert(tk.END, text)
         info.config(state="disabled")
 
-    def decrypt(self, password, info, label):
+    def decrypt(self, password, info, label, mode):
         info.config(state="normal")
         info.delete('1.0', tk.END)
         self.password_d = str(password.get())
         if self.password_d is not '' and self.file_path2 is not '':
-            output = cryptography.decrypt_CBC(self.file_path2, self.password_d)
+            if mode == 'CBC':
+                output = cryptography.decrypt_CBC(self.file_path2, self.password_d)
+            elif mode == 'CFB':
+                output = cryptography.decrypt_CFB(self.file_path2, self.password_d)
+            else:
+                output = False
+                text = " Choose an appropriate encryption mode"
+                info.insert(tk.END, text)
             self.password_d = ''
             if output is not False:
                 text = "Cryptographic process completed.\n"\
-                               + "\nThe decrypted image file: \n" + output.split("/")[-1]
+                               + "The decrypted image file: \n" + output.split("/")[-1]
                 info.insert(tk.END, text)
                 self.password_d = ''
                 self.file_path2 = ''
@@ -337,10 +351,15 @@ class Cryptography(tk.Frame):
         entry_password_e.grid(column=1, row=4, pady=10)
         text_information_encrypted = tk.Text(self, height=5, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
         text_information_encrypted.config(state="disabled")
-        text_information_encrypted.grid(column=0, row=5)
+        text_information_encrypted.grid(column=0, row=6)
+        label_mode_e = tk.Label(self, text="Choose an \n encryption mode: ", font="Verdana 9")
+        label_mode_e.grid(column=0, row=5, sticky="W", padx=10)
+        combo_mode_e = ttk.Combobox(self, state="readonly", values=["CBC", "CFB"])
+        combo_mode_e.grid(column=0, row=5, sticky="E", padx=10)
+        combo_mode_e.current(0)
         button_encrypt = tk.Button(self, text="ENCRYPT", font="Verdana 10 bold", command=lambda: controller.encrypt(
-            entry_password_e, text_information_encrypted, label_path_e))
-        button_encrypt.grid(column=1, row=5, sticky="W", pady=10)
+            entry_password_e, text_information_encrypted, label_path_e, combo_mode_e.get()))
+        button_encrypt.grid(column=1, row=5, pady=10)
 
         # Decrypting an image
         label_top_d = tk.Label(self, text="Decrypt a digital image                    ", font="Verdana 10 bold")
@@ -357,18 +376,23 @@ class Cryptography(tk.Frame):
         entry_password_d = Entry(self, width=30, xscrollcommand=scrollbar.set, show="*")
         entry_password_d.grid(column=1, row=10, pady=10)
         text_information_decrypted = tk.Text(self, height=5, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
-        text_information_decrypted.grid(column=0, row=11)
+        text_information_decrypted.grid(column=0, row=12)
+        label_mode_d = tk.Label(self, text="Choose an \n encryption mode: ", font="Verdana 9")
+        label_mode_d.grid(column=0, row=11, sticky="W", padx=10)
+        combo_mode_d = ttk.Combobox(self, state="readonly", values=["CBC", "CFB"])
+        combo_mode_d.grid(column=0, row=11, sticky="E", padx=10)
+        combo_mode_d.current(0)
         button_decrypt = tk.Button(self, text="DECRYPT", font="Verdana 10 bold", command=lambda: controller.decrypt(
-            entry_password_d, text_information_decrypted, label_path_d))
+            entry_password_d, text_information_decrypted, label_path_d, combo_mode_d.get()))
         button_decrypt.grid(column=1, row=11, sticky="W", pady=10)
 
         button = tk.Button(self, text="Go back to main menu", width=35, font="Verdana 10 italic",
                            command=lambda: [controller.show_window("Menu"), controller.reset_crypto(
                                text_information_decrypted, text_information_encrypted, entry_password_d,
                                entry_password_e, label_path_d, label_path_e)])
-        button.grid(column=0, row=12, pady=10)
+        button.grid(column=0, row=13, pady=10)
         label_info = tk.Label(self, text="OUTPUT FILES GET SAVED INTO THE SAME FOLDER AS INPUT FILES.   ", font="Verdana 7 italic")
-        label_info.grid(column=0, row=13, pady=10, padx=15)
+        label_info.grid(column=0, row=14, pady=10, padx=15)
 
 
 if __name__ == "__main__":
