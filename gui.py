@@ -6,7 +6,6 @@ import steganography
 import cryptography
 from tkinter.filedialog import askopenfilename, Toplevel
 
-
 class EncryptOrHideApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
@@ -267,15 +266,20 @@ class Menu(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        label = tk.Label(self, text="Choose what you want to do \n with a secret message", font="Verdana 15 bold")
-        label.pack(side="top", fill="x", pady=90)
+        label = tk.Label(self, text="Choose what you want to do \n using a digital image as information carrier", font="Verdana 15 bold")
+        label.pack(side="top", fill="x", pady=50)
 
-        button1 = tk.Button(self, text="Hide/Recover \n(steganography)", width=30, font="Verdana 10 italic",
+        button_stegano = tk.Button(self, text="Hide/Recover \n message in form of a text \n(steganography)", width=30, font="Verdana 10 italic",
                             command=lambda: controller.show_window("Steganography"))
-        button2 = tk.Button(self, text="Encrypt/Decrypt \n(cryptography)", width=30, font="Verdana 10 italic",
+        button_crypto = tk.Button(self, text="Encrypt/Decrypt \n message in form of an image \n(cryptography)", width=30, font="Verdana 10 italic",
                             command=lambda: controller.show_window("Cryptography"))
-        button1.pack()
-        button2.pack()
+        with open('description') as f:
+            info = f.read()
+        text_menu_info = tk.Text(self, height=20, width=60, font="Verdana 10", bg="#F0F0F0", borderwidth=0, wrap=tk.WORD, pady=40)
+        text_menu_info.insert(tk.END, info)
+        button_stegano.pack()
+        button_crypto.pack()
+        text_menu_info.pack()
         controller.reset_values()
 
 
@@ -394,7 +398,7 @@ class Cryptography(tk.Frame):
         combo_mode_d.current(0)
         button_decrypt = tk.Button(self, text="DECRYPT", font="Verdana 10 bold", command=lambda: controller.decrypt(
             entry_password_d, text_information_decrypted, label_path_d, combo_mode_d.get()))
-        button_decrypt.grid(column=1, row=11, sticky="W", pady=10)
+        button_decrypt.grid(column=1, row=11, pady=10)
 
         button = tk.Button(self, text="Go back to main menu", width=35, font="Verdana 10 italic",
                            command=lambda: [controller.show_window("Menu"), controller.reset_crypto(

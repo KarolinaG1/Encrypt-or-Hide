@@ -1,0 +1,8 @@
+
+This application allows to perform steganography and cryptography processes using digital images as information carriers.
+
+First option (steganography) uses .png files as cover-image to hide (and later recover) secret text message as either plaintext or cryptogram through LSB method. Polish characters are supported only when secret message is in form of a plaintext (utf-8 encoding) in contrary to being encrypted before embedding (latin-1 encoding).
+
+Cryptography functionality lets the user encrypt (and later decrypt) a confidential image using AES algorithm and make it unreadable to any operating system.
+
+When encrypting either text or image, the encryption mode can be chosen by the user. Two available modes are CFB and CBC.
