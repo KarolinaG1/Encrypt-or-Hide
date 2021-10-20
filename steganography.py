@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import codecs
 import os.path
+import re
 import time
 
 import cv2
@@ -19,27 +20,13 @@ def to_bin(data):
         raise TypeError("Incorrect type!")
 
 
-'''
-def to_ascii(binary_data):
-    #converting binary data to ascii representation
-    data_int = int(binary_data, 2)
-    byte_nr = data_int.bit_length() + 7 // 8
-    #lsb_bytes = [lsb_all[i:i+8] for i in range(0, len(lsb_all), 8)]
-    #print(lsb_bytes)
-    data_bytes = data_int.to_bytes(byte_nr, "big")
-    data_ascii = data_bytes.decode(encoding='utf-8', errors='ignore')
-    return data_ascii
-'''
-
-
 def to_ascii(binary_data):
     # converting binary data to ascii representation
-    ascii_data = []
-    for i in range(int((len(binary_data) + 1) / 8)):
-        ascii_data.append(binary_data[i * 8:(i * 8 + 8)])
-    ascii_data = [chr(int(''.join(i), 2)) for i in ascii_data]
-    ascii_data = ''.join(ascii_data)
-    return ascii_data
+    data_int = int(binary_data, 2)
+    byte_nr = (data_int.bit_length() + 7) // 8
+    data_bytes = data_int.to_bytes(byte_nr, 'big')
+    data_ascii = data_bytes.decode(encoding='utf-8')
+    return data_ascii
 
 
 def get_data(image_path, secret):
@@ -57,17 +44,24 @@ def get_data(image_path, secret):
             print("You can hide this message. Performing steganography...")
             bit_loss, output_path = hide_message(image, secret, image_path)
         return bit_loss, output_path
+        print("You can hide this message. Performing steganography...")
+        bit_loss, output_path = hide_message(image, secret, image_path)
+        return bit_loss, output_path
     else:
         return 111, False
 
 
 def hide_message(image, secret, original_path):
     # secret message preparation
+    print(type(secret))
     secret_bin = to_bin(secret)
+    print("Secret in bin " + str(secret_bin))
     print("Secret message to be hidden in binary form: " + secret_bin)
     secret_bin_len = len(secret_bin)
+    print("Length of length: " + str(bin(secret_bin_len)[2:]))
     print("Length of the message in bits: " + str(secret_bin_len))
     secret_bin = bin(secret_bin_len)[2:] + to_bin("@#@#@") + secret_bin
+    print("Length of delimiter: " + str(len(to_bin("@#@#@"))))
     print("Message with overload added: " + secret_bin)
     secret_bin_len = len(secret_bin)
     print("Length of the final secret: " + str(secret_bin_len))
@@ -113,7 +107,7 @@ def recover_message(image_path):
     if image is not None:
         height, width = image.shape[0], image.shape[1]
         lsb_all = ''
-
+        # Extracting all LSBs of the cover image to one variable
         for i in range(height):
             for j in range(width):
                 pixel = image[i, j]
@@ -122,39 +116,21 @@ def recover_message(image_path):
                 from_b = to_bin(pixel[2])
                 lsb_all += from_r[7] + from_g[7] + from_b[7]
 
+        # Extracting the bits of the message from collected LSBs
         delimiter = to_bin("@#@#@")
         end_of_msg_len = lsb_all.find(delimiter)
         if end_of_msg_len != -1:
             print(end_of_msg_len)
-            # print(end_of_msg_len)
             msg_len_bin = lsb_all[0:end_of_msg_len]
-            # print(msg_len_bin)
             msg_len = int(msg_len_bin, 2)
-            print("Length of the recovered message: " + str(msg_len))
+            print("Length of the recovered message: " + str(msg_len) + " bits")
             start_of_msg_pointer = end_of_msg_len + len(delimiter)
             end_of_msg_pointer = start_of_msg_pointer + msg_len
             message = lsb_all[start_of_msg_pointer:end_of_msg_pointer]
+            print("Message in bin: " + str(message))
             recovered_message = to_ascii(message)
-            # recovered_message = (''.join([chr(int(x,2)) for x in re.split('(........)', message) if x ])).encode('utf-8').decode('utf-8')
-           # print("Message in ascii representation: " + recovered_message)
-            r_m = recovered_message.encode('utf-8')
-            r_m = codecs.decode(r_m, 'utf-8')
-            #print("Message in ascii representation (v2): " + r_m)
             return recovered_message
         else:
             return False
     else:
         return False
-    # msg_len_int = int()
-    # recovered_ascii = ''.join(chr(int(lsb_all[i:i+8],2)) for i in range(len(lsb_all))[::8])
-    # f = open("C://Users//User//Desktop//secret.txt", "w", encoding="utf-8")
-    # f.write(recovered_message)
-    # print(f.read())
-    # f.close()
-    # recovered = ''.join(chr(int(char, 2)))
-    # recovered = int(lsb_all, 2)
-    # recovered = recovered.to_bytes((recovered.bit_length() + 7) // 8, 'big').decode(encoding='utf-8', errors='ignore')
-    # print(recovered)
-
-
-

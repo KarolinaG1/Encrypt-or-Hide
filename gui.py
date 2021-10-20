@@ -3,14 +3,14 @@ import tkinter as tk
 from tkinter.ttk import *
 import steganography
 import cryptography
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, Toplevel
 
 
 class EncryptOrHideApp(tk.Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.geometry("570x540")
+        self.geometry("580x600")
         self.title("Encrypt or Hide")
         self.resizable(False, False)
         self.file_path1 = ''
@@ -58,10 +58,14 @@ class EncryptOrHideApp(tk.Tk):
         self.file_path2 = askopenfilename(filetype=acceptable_types)
         label["text"] = ".../" + os.path.split(self.file_path2)[1]
 
-    def hide(self, message, info, label):
+    def hide(self, message, info, label, en_flag):
         info.config(state="normal")
         info.delete("1.0", tk.END)
-        self.message = str(message.get())
+        if en_flag is False:
+            self.message = str(message.get())
+        else:
+            self.message = self.message.decode('latin-1')
+            print("In str: " + self.message)
         if self.message is not '' and self.file_path1 is not '':
             self.loss, output = steganography.get_data(self.file_path1, self.message)
             self.message = ''
@@ -82,6 +86,28 @@ class EncryptOrHideApp(tk.Tk):
             info.insert(tk.END, text)
         info.config(state="disabled")
 
+    def hide_cipher(self, message, info, label):
+        info.config(state="normal")
+        info.delete("1.0", tk.END)
+        info.config(state="disabled")
+        self.message = str(message.get())
+        password_window = Toplevel(self)
+        password_window.title("Password")
+        password_window.geometry("450x150")
+        label_top = tk.Label(password_window, text="Input a desired password for your message", font="Verdana 10 bold")
+        label_top.grid(column=0, row=1, pady=5, padx=10)
+        entry_password = Entry(password_window, width=30, show="*")
+        entry_password.grid(column=0, row=2, pady=10)
+        button_proceed = tk.Button(password_window, text="PROCEED", font="Verdana 10 bold", command=lambda: self.encrypt_message(entry_password, label, info, password_window, message))
+        button_proceed.grid(column=1, row=10, sticky="W", pady=10)
+
+    def encrypt_message(self, pswrd, label, info, window, message):
+        password = str(pswrd.get())
+        msg = str.encode(self.message)
+        self.message = cryptography.encrypt_text(msg, password)
+        window.destroy()
+        self.hide(message, info, label, True)
+
     def recover(self, info, label):
         info.config(state="normal")
         info.delete("1.0", tk.END)
@@ -91,6 +117,43 @@ class EncryptOrHideApp(tk.Tk):
             info.insert(tk.END, text)
             self.file_path2 = ''
             label["text"] = "No file has been chosen"
+        else:
+            text = "There seems to be no message \n hidden using this application.\n" \
+                           "Choose another image."
+            info.insert(tk.END, text)
+            info["font"] = "Verdana 8 bold"
+        info.config(state="disabled")
+
+    def recover_cipher(self, info, label):
+        info.config(state="normal")
+        info.delete("1.0", tk.END)
+        info.config(state="disabled")
+        password_window = Toplevel(self)
+        password_window.title("Password")
+        password_window.geometry("450x150")
+        label_top = tk.Label(password_window, text="Input a password for chosen carrier", font="Verdana 10 bold")
+        label_top.grid(column=0, row=1, pady=5, padx=10)
+        entry_password = Entry(password_window, width=30, show="*")
+        entry_password.grid(column=0, row=2, pady=10)
+        button_proceed = tk.Button(password_window, text="PROCEED", font="Verdana 10 bold", command=lambda: self.recover_message(entry_password, info, label, password_window))
+        button_proceed.grid(column=1, row=10, sticky="W", pady=10)
+
+    def recover_message(self, pswrd, info, label, window):
+        info.config(state="normal")
+        info.delete("1.0", tk.END)
+        recovered_c = steganography.recover_message(self.file_path2)
+        pswrd = str(pswrd.get())
+        window.destroy()
+        if recovered_c is not False:
+            recovered = cryptography.decrypt_text(recovered_c, pswrd)
+            if recovered is not False:
+                text = "Recovered secret message is: \n" + recovered
+                info.insert(tk.END, text)
+                self.file_path2 = ''
+                label["text"] = "No file has been chosen"
+            else:
+                text = "Error has occurred. \nFile and password mismatch."
+                info.insert(tk.END, text)
         else:
             text = "There seems to be no message \n hidden using this application.\n" \
                            "Choose another image."
@@ -214,8 +277,14 @@ class Steganography(tk.Frame):
         entry_message.grid(column=1, row=4, pady=10)
         text_information_hidden = tk.Text(self, height=7, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
         text_information_hidden.grid(column=0, row=5)
-        button_hide = tk.Button(self, text="HIDE", font="Verdana 10 bold", command=lambda: controller.hide(entry_message, text_information_hidden, label_path))
+        button_hide = tk.Button(self, text="HIDE", font="Verdana 10 bold", command=lambda: controller.hide(entry_message, text_information_hidden, label_path, False))
         button_hide.grid(column=1, row=5, sticky="W", pady=10)
+        button_hide_cipher = tk.Button(self, text="ENCRYPT \n AND HIDE", font="Verdana 8 bold", command=lambda: controller.hide_cipher(entry_message, text_information_hidden, label_path))
+        button_hide_cipher.grid(column=1, row=5, sticky="E", pady=10)
+        label_info_hiding = tk.Label(self, text="If you want your message to be encrypted before\n the embedding "
+                                                "process - press 'ENCRYPT AND HIDE' button", font="Verdana 8 italic",
+                                     fg='blue')
+        label_info_hiding.grid(column=0, row=6)
 
         # Recovering a message
         label_top2 = tk.Label(self, text="Recover a secret message from a digital image", font="Verdana 10 bold")
@@ -229,18 +298,21 @@ class Steganography(tk.Frame):
         text_information_recovered = tk.Text(self, height=7, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
         text_information_recovered.grid(column=0, row=10)
         button_recover = tk.Button(self, text="RECOVER", font="Verdana 10 bold", command=lambda: controller.recover(text_information_recovered, label_path2))
-        button_recover.grid(column=1, row=10, sticky="W", pady=10)
-
+        button_recover.grid(column=1, row=10, sticky="W", pady=5)
+        button_recover_cipher = tk.Button(self, text="RECOVER \n CRYPTOGRAM", font="Verdana 8 bold", command=lambda: controller.recover_cipher(text_information_recovered, label_path2))
+        button_recover_cipher.grid(column=1, row=10, sticky="E", pady=5)
+        label_info_hiding = tk.Label(self, text="If you want to recover an encrypted message - press\n"
+                                                "'RECOVER CRYPTOGRAM' button", font="Verdana 8 italic",
+                                     fg='blue')
+        label_info_hiding.grid(column=0, row=11)
 
         button = tk.Button(self, text="Go back to main menu", width=35, font="Verdana 10 italic",
                            command=lambda: [controller.show_window("Menu"), controller.reset_stegano(
                                text_information_hidden, text_information_recovered, entry_message,
                                label_path, label_path2)])
-        button.grid(column=0, row=11, pady=10)
+        button.grid(column=0, row=12, pady=10)
         label_info = tk.Label(self, text="FILES USED IN A STEGANOGRAPHY PROCESS MUST BE IN .PNG FORMAT.", font="Verdana 7 italic")
-        label_info.grid(column=0, row=12, pady=10, padx=15)
-
-
+        label_info.grid(column=0, row=13, pady=10, padx=15)
 
 
 class Cryptography(tk.Frame):

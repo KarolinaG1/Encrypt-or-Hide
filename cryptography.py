@@ -18,6 +18,13 @@ def to_bin(data):
     else:
         raise TypeError("Incorrect type!")
 
+def to_ascii(binary_data):
+    # converting binary data to ascii representation
+    data_int = int(binary_data, 2)
+    byte_nr = (data_int.bit_length() + 7) // 8
+    data_bytes = data_int.to_bytes(byte_nr, 'big')
+    data_ascii = data_bytes.decode(encoding='utf-8')
+    return data_ascii
 
 def get_data(image_path, password):
     # plaintext preparation
@@ -26,7 +33,7 @@ def get_data(image_path, password):
     image_file.close()
 
     # key preparation
-    salt = b'An exemplary salt'    # additional security measure of a password
+    salt = b'An exemplary salt'             # additional security measure of a password
     key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
     return plaintext, key, image_path
 
@@ -85,7 +92,7 @@ def decrypt_CBC(cipher, password):
         ciph = f.read()
         f.close()
     # Prepare data
-    salt = b'An exemplary salt'    # additional security measure of a password
+    salt = b'An exemplary salt'             # additional security measure of a password
     key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
     iv = key[:16]
     decipher = AES.new(key, AES.MODE_CBC, iv)
@@ -105,3 +112,34 @@ def decrypt_CBC(cipher, password):
         f.close()
         return fname
     return False
+
+
+def encrypt_text(plaintext, password):
+    # key preparation
+    salt = b'An exemplary salt'             # additional security measure of a password
+    key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
+    iv = key[:16]                           # initialization vector derived from a key
+    cipher = AES.new(key, AES.MODE_CFB, iv)
+    cryptogram = cipher.encrypt(plaintext)
+    return cryptogram
+
+def decrypt_text(cryptogram, password):
+    # key preparation
+    salt = b'An exemplary salt'             # additional security measure of a password
+    key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
+    iv = key[:16]                           # initialization vector derived from a key
+    decipher = AES.new(key, AES.MODE_CFB, iv)
+    print(type(cryptogram))
+    print("szyfrogram: " + cryptogram)
+#    cryptogram = str.encode(cryptogram)
+   # print(type(cryptogram))
+    try:
+        cryptogram = str.encode(cryptogram, encoding="latin-1")
+        print("Po konwersji "+ str(cryptogram))
+        message = decipher.decrypt(cryptogram)
+        print(type(message))
+        print("plain: " + str(message))
+    except ValueError:
+        return False
+    return message.decode('latin-1')
+
