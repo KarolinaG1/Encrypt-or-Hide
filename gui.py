@@ -93,19 +93,24 @@ class EncryptOrHideApp(tk.Tk):
         info.config(state="disabled")
         self.message = str(message.get())
         password_window = Toplevel(self)
-        password_window.title("Password")
+        password_window.title("Password and encryption mode")
         password_window.geometry("450x150")
         label_top = tk.Label(password_window, text="Input a desired password for your message", font="Verdana 10 bold")
         label_top.grid(column=0, row=1, pady=5, padx=10)
         entry_password = Entry(password_window, width=30, show="*")
         entry_password.grid(column=0, row=2, pady=10)
-        button_proceed = tk.Button(password_window, text="PROCEED", font="Verdana 10 bold", command=lambda: self.encrypt_message(entry_password, label, info, password_window, message))
-        button_proceed.grid(column=1, row=10, sticky="W", pady=10)
+        label_mode_e = tk.Label(password_window, text="Choose an \n encryption mode: ", font="Verdana 9")
+        label_mode_e.grid(column=0, row=3, sticky="W", padx=10)
+        combo_mode_e = ttk.Combobox(password_window, state="readonly", values=["CBC", "CFB"])
+        combo_mode_e.grid(column=0, row=3, sticky="E", padx=10)
+        combo_mode_e.current(0)
+        button_proceed = tk.Button(password_window, text="PROCEED", font="Verdana 10 bold", command=lambda: self.encrypt_message(entry_password, label, info, password_window, message, combo_mode_e.get()))
+        button_proceed.grid(column=1, row=3, pady=10)
 
-    def encrypt_message(self, pswrd, label, info, window, message):
+    def encrypt_message(self, pswrd, label, info, window, message, mode):
         password = str(pswrd.get())
         msg = str.encode(self.message)
-        self.message = cryptography.encrypt_text(msg, password)
+        self.message = cryptography.encrypt_text(msg, password, mode)
         window.destroy()
         self.hide(message, info, label, True)
 
@@ -130,30 +135,35 @@ class EncryptOrHideApp(tk.Tk):
         info.delete("1.0", tk.END)
         info.config(state="disabled")
         password_window = Toplevel(self)
-        password_window.title("Password")
+        password_window.title("Password and encryption mode")
         password_window.geometry("450x150")
         label_top = tk.Label(password_window, text="Input a password for chosen carrier", font="Verdana 10 bold")
         label_top.grid(column=0, row=1, pady=5, padx=10)
         entry_password = Entry(password_window, width=30, show="*")
         entry_password.grid(column=0, row=2, pady=10)
-        button_proceed = tk.Button(password_window, text="PROCEED", font="Verdana 10 bold", command=lambda: self.recover_message(entry_password, info, label, password_window))
-        button_proceed.grid(column=1, row=10, sticky="W", pady=10)
+        label_mode_d = tk.Label(password_window, text="Choose an \n encryption mode: ", font="Verdana 9")
+        label_mode_d.grid(column=0, row=3, sticky="W", padx=10)
+        combo_mode_d = ttk.Combobox(password_window, state="readonly", values=["CBC", "CFB"])
+        combo_mode_d.grid(column=0, row=3, sticky="E", padx=10)
+        combo_mode_d.current(0)
+        button_proceed = tk.Button(password_window, text="PROCEED", font="Verdana 10 bold", command=lambda: self.recover_message(entry_password, info, label, password_window, combo_mode_d.get()))
+        button_proceed.grid(column=1, row=3, sticky="W", pady=10)
 
-    def recover_message(self, pswrd, info, label, window):
+    def recover_message(self, pswrd, info, label, window, mode):
         info.config(state="normal")
         info.delete("1.0", tk.END)
         recovered_c = steganography.recover_message(self.file_path2)
         pswrd = str(pswrd.get())
         window.destroy()
         if recovered_c is not False:
-            recovered = cryptography.decrypt_text(recovered_c, pswrd)
+            recovered = cryptography.decrypt_text(recovered_c, pswrd, mode)
             if recovered is not False:
                 text = "Recovered secret message is: \n" + recovered
                 info.insert(tk.END, text)
                 self.file_path2 = ''
                 label["text"] = "No file has been chosen"
             else:
-                text = "Error has occurred. \nFile and password mismatch."
+                text = "Error has occurred. \nPassword or encryption mode mismatch."
                 info.insert(tk.END, text)
         else:
             text = "There seems to be no message \n hidden using this application.\n" \

@@ -122,30 +122,46 @@ def decrypt_CBC(cipher, password):
         return fname
 
 
-def encrypt_text(plaintext, password):
-    # AES encryption process of text in CFB mode
+def encrypt_text(plaintext, password, mode):
+    # AES encryption process of text in CFB or CBC mode
 
     # key preparation
     salt = b'An exemplary salt'             # additional security measure of a password
     key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
     iv = key[:16]                           # initialization vector derived from a key
-    cipher = AES.new(key, AES.MODE_CFB, iv)
-    cryptogram = cipher.encrypt(plaintext)
+    if mode == "CBC":
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        cryptogram = cipher.encrypt(pad(plaintext, 16))
+    elif mode == "CFB":
+        cipher = AES.new(key, AES.MODE_CFB, iv)
+        cryptogram = cipher.encrypt(plaintext)
+    else:
+        return False
     return cryptogram
 
 
-def decrypt_text(cryptogram, password):
-    # AES decryption process of text in CFB mode
+def decrypt_text(cryptogram, password, mode):
+    # AES decryption process of text in CFB or CBC mode
 
     # key preparation
     salt = b'An exemplary salt'             # additional security measure of a password
     key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
     iv = key[:16]                           # initialization vector derived from a key
-    decipher = AES.new(key, AES.MODE_CFB, iv)
-    try:
-        cryptogram = str.encode(cryptogram, encoding="latin-1")
-        message = decipher.decrypt(cryptogram)
-    except ValueError:
+    if mode == "CBC":
+        decipher = AES.new(key, AES.MODE_CBC, iv)
+        try:
+            cryptogram = str.encode(cryptogram, encoding="latin-1")
+            message = decipher.decrypt(cryptogram)
+            message = unpad(message, 16)
+        except ValueError:
+            return False
+    elif mode == "CFB":
+        decipher = AES.new(key, AES.MODE_CFB, iv)
+        try:
+            cryptogram = str.encode(cryptogram, encoding="latin-1")
+            message = decipher.decrypt(cryptogram)
+        except ValueError:
+            return False
+    else:
         return False
     return message.decode('latin-1')
-
