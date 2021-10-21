@@ -99,7 +99,7 @@ def hide_message(image, secret, original_path):
     return loss_percentage, output_path
 
 
-def recover_message(image_path):
+def uncover_message(image_path):
     image = cv2.imread(image_path)
     if image is not None:
         height, width = image.shape[0], image.shape[1]
@@ -120,13 +120,13 @@ def recover_message(image_path):
             print(end_of_msg_len)
             msg_len_bin = lsb_all[0:end_of_msg_len]
             msg_len = int(msg_len_bin, 2)
-            print("Length of the recovered message: " + str(msg_len) + " bits")
+            print("Length of the uncovered message: " + str(msg_len) + " bits")
             start_of_msg_pointer = end_of_msg_len + len(delimiter)
             end_of_msg_pointer = start_of_msg_pointer + msg_len
             message = lsb_all[start_of_msg_pointer:end_of_msg_pointer]
             print("Message in bin: " + str(message))
-            recovered_message = to_ascii(message)
-            return recovered_message
+            uncovered_message = to_ascii(message)
+            return uncovered_message
         else:
             return False
     else:

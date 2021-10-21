@@ -65,7 +65,7 @@ def decrypt_CFB(cipher, password):
     iv = key[:16]                           # extracting iv from the last 16 bytes of key
     decipher = AES.new(key, AES.MODE_CFB, iv)
     try:
-        recovered_data = decipher.decrypt(ciph)
+        uncovered_data = decipher.decrypt(ciph)
     except ValueError:
         return False
     output_path = os.path.splitext(cipher)[0]
@@ -73,7 +73,7 @@ def decrypt_CFB(cipher, password):
     fname = output_path + "_decrypted_" + extension
     with open(fname, 'wb') as f:
         try:
-            f.write(recovered_data)
+            f.write(uncovered_data)
         except ValueError:
             return False
         f.close()
@@ -106,7 +106,7 @@ def decrypt_CBC(cipher, password):
     iv = key[:16]
     decipher = AES.new(key, AES.MODE_CBC, iv)
     try:
-        recovered_data = decipher.decrypt(ciph)
+        uncovered_data = decipher.decrypt(ciph)
     except ValueError:
         return False
     output_path = os.path.splitext(cipher)[0]
@@ -115,7 +115,7 @@ def decrypt_CBC(cipher, password):
 
     with open(fname, 'wb') as f:
         try:
-            f.write(unpad(recovered_data, 16))
+            f.write(unpad(uncovered_data, 16))
         except ValueError:
             return False
         f.close()
