@@ -273,16 +273,17 @@ class Menu(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
         label = tk.Label(self, text="Choose what you want to do \n using a digital image as information carrier", font="Verdana 15 bold")
-        label.pack(side="top", fill="x", pady=50)
+        label.pack(side="top", fill="x", pady=40)
 
-        button_stegano = tk.Button(self, text="Hide/Uncover \n message in form of a text \n(steganography)", width=30, font="Verdana 10 italic",
-                            command=lambda: controller.show_window("Steganography"))
-        button_crypto = tk.Button(self, text="Encrypt/Decrypt \n message in form of an image \n(cryptography)", width=30, font="Verdana 10 italic",
-                            command=lambda: controller.show_window("Cryptography"))
+        button_stegano = tk.Button(self, text="Hide/Uncover \n message in form of a text \n(steganography)", width=30, font="Verdana 10 bold",
+                            command=lambda: controller.show_window("Steganography"), fg='blue')
+        button_crypto = tk.Button(self, text="Encrypt/Decrypt \n message in form of an image \n(cryptography)", width=30, font="Verdana 10 bold",
+                            command=lambda: controller.show_window("Cryptography"), fg='blue')
         with open('description') as f:
             info = f.read()
-        text_menu_info = tk.Text(self, height=20, width=60, font="Verdana 10", bg="#F0F0F0", borderwidth=0, wrap=tk.WORD, pady=40)
+        text_menu_info = tk.Text(self, height=20, width=60, font="Verdana 10", bg="#F0F0F0", borderwidth=0, wrap=tk.WORD, pady=15)
         text_menu_info.insert(tk.END, info)
+        text_menu_info.config(state="disabled")
         button_stegano.pack()
         button_crypto.pack()
         text_menu_info.pack()
