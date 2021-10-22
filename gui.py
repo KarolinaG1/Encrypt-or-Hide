@@ -58,22 +58,25 @@ class EncryptOrHideApp(tk.Tk):
         self.file_path2 = askopenfilename(filetype=acceptable_types)
         label["text"] = ".../" + os.path.split(self.file_path2)[1]
 
-    def hide(self, message, info, label, en_flag):
+    def hide(self, message, info, label, en_flag, stat):
         info.config(state="normal")
         info.delete("1.0", tk.END)
+        stat.config(state="normal")
+        stat.delete("1.0", tk.END)
         if en_flag is False:
             self.message = str(message.get())
         else:
             self.message = self.message.decode('latin-1')
             print("In str: " + self.message)
         if self.message is not '' and self.file_path1 is not '':
-            self.loss, output = steganography.get_data(self.file_path1, self.message)
+            self.loss, output, mse, psnr = steganography.get_data(self.file_path1, self.message)
             self.message = ''
             if self.loss != 111 and output is not False:
-                text = "Steganographic process completed.\nRoughly " + str(round(self.loss, 2)) \
-                               + "% of bits \nof the cover image had to be modified \nin order to hide the secret message." \
-                               + "\nThe output file: \n" + output.split("/")[-1]
+                text = "Steganographic process completed. \
+                               \nThe output file: \n" + output.split("/")[-1]
                 info.insert(tk.END, text)
+                stats = "Embedding statistics: \nPSNR: " + str(round(psnr, 4)) + "dB" + "\nMSE: " + str(round(mse, 4)) + "dB" + "\nBits modified: " + str(round(self.loss, 4)) + "%"
+                stat.insert(tk.END, stats)
                 self.loss = 111
                 self.file_path1 = ''
                 message.delete(0, 'end')
@@ -85,6 +88,7 @@ class EncryptOrHideApp(tk.Tk):
             text = "Please, provide the app with your message \n and a digital carrier"
             info.insert(tk.END, text)
         info.config(state="disabled")
+        stat.config(state="disabled")
 
     def hide_cipher(self, message, info, label):
         info.config(state="normal")
@@ -118,7 +122,7 @@ class EncryptOrHideApp(tk.Tk):
         info.delete("1.0", tk.END)
         uncovered = steganography.uncover_message(self.file_path2)
         if uncovered is not False:
-            text = "uncovered secret message is: \n" + str(uncovered)
+            text = "Uncovered secret message is: \n" + str(uncovered)
             info.insert(tk.END, text)
             self.file_path2 = ''
             label["text"] = "No file has been chosen"
@@ -157,7 +161,7 @@ class EncryptOrHideApp(tk.Tk):
         if uncovered_c is not False:
             uncovered = cryptography.decrypt_text(uncovered_c, pswrd, mode)
             if uncovered is not False:
-                text = "uncovered secret message is: \n" + uncovered
+                text = "Uncovered secret message is: \n" + uncovered
                 info.insert(tk.END, text)
                 self.file_path2 = ''
                 label["text"] = "No file has been chosen"
@@ -249,11 +253,13 @@ class EncryptOrHideApp(tk.Tk):
         label1["text"] = ""
         label2["text"] = ""
 
-    def reset_stegano(self, text1, text2, entry, label1, label2):
+    def reset_stegano(self, text1, text2, text3, entry, label1, label2):
         text1.config(state="normal")
         text2.config(state="normal")
+        text3.config(state="normal")
         text1.delete("1.0", tk.END)
         text2.delete("1.0", tk.END)
+        text3.delete("1.0", tk.END)
         text1.config(state="disabled")
         text2.config(state="disabled")
         entry.delete(0, 'end')
@@ -303,19 +309,24 @@ class Steganography(tk.Frame):
         scrollbar = tk.Scrollbar(orient="horizontal")
         entry_message = Entry(self, width=30, xscrollcommand=scrollbar.set)
         entry_message.grid(column=1, row=4, pady=10)
+        text_statistics = tk.Text(self, height=4, width=20, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
+        text_statistics.grid(column=1, row=6)
+        text_statistics.config(state="disabled")
         text_information_hidden = tk.Text(self, height=7, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
         text_information_hidden.grid(column=0, row=5)
-        button_hide = tk.Button(self, text="HIDE", font="Verdana 10 bold", command=lambda: controller.hide(entry_message, text_information_hidden, label_path, False))
+        text_information_hidden.config(state="disabled")
+        button_hide = tk.Button(self, text="HIDE", font="Verdana 10 bold", command=lambda: controller.hide(entry_message, text_information_hidden, label_path, False, text_statistics))
         button_hide.grid(column=1, row=5, sticky="W", pady=10)
-        button_hide_cipher = tk.Button(self, text="ENCRYPT \n AND HIDE", font="Verdana 8 bold", command=lambda: controller.hide_cipher(entry_message, text_information_hidden, label_path))
+        button_hide_cipher = tk.Button(self, text="ENCRYPT \n AND HIDE", font="Verdana 8 bold", command=lambda: controller.hide_cipher(entry_message, text_information_hidden, label_path, text_statistics))
         button_hide_cipher.grid(column=1, row=5, sticky="E", pady=10)
         label_info_hiding = tk.Label(self, text="If you want your message to be encrypted before\n the embedding "
                                                 "process - press 'ENCRYPT AND HIDE' button", font="Verdana 8 italic",
                                      fg='blue')
         label_info_hiding.grid(column=0, row=6)
 
+
         # uncovering a message
-        label_top2 = tk.Label(self, text="uncover a secret message from a digital image", font="Verdana 10 bold")
+        label_top2 = tk.Label(self, text="Uncover a secret message from a digital image", font="Verdana 10 bold")
         label_top2.grid(column=0, row=7, pady=30, padx=5, sticky="NW")
         label_image2 = tk.Label(self, text="Choose an image with a secret hidden", font="Verdana 10")
         label_image2.grid(column=0, row=8, padx=10, sticky="W")
@@ -325,19 +336,20 @@ class Steganography(tk.Frame):
         button_search2.grid(column=1, row=8, padx=10, sticky="W")
         text_information_uncovered = tk.Text(self, height=7, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
         text_information_uncovered.grid(column=0, row=10)
-        button_uncover = tk.Button(self, text="uncover", font="Verdana 10 bold", command=lambda: controller.uncover(text_information_uncovered, label_path2))
+        text_information_uncovered.config(state="disabled")
+        button_uncover = tk.Button(self, text="UNCOVER", font="Verdana 10 bold", command=lambda: controller.uncover(text_information_uncovered, label_path2))
         button_uncover.grid(column=1, row=10, sticky="W", pady=5)
-        button_uncover_cipher = tk.Button(self, text="uncover \n CRYPTOGRAM", font="Verdana 8 bold", command=lambda: controller.uncover_cipher(text_information_uncovered, label_path2))
+        button_uncover_cipher = tk.Button(self, text="UNCOVER \n CRYPTOGRAM", font="Verdana 8 bold", command=lambda: controller.uncover_cipher(text_information_uncovered, label_path2))
         button_uncover_cipher.grid(column=1, row=10, sticky="E", pady=5)
         label_info_hiding = tk.Label(self, text="If you want to uncover an encrypted message - press\n"
-                                                "'uncover CRYPTOGRAM' button", font="Verdana 8 italic",
+                                                "'UNCOVER CRYPTOGRAM' button", font="Verdana 8 italic",
                                      fg='blue')
         label_info_hiding.grid(column=0, row=11)
 
         button = tk.Button(self, text="Go back to main menu", width=35, font="Verdana 10 italic",
                            command=lambda: [controller.show_window("Menu"), controller.reset_stegano(
-                               text_information_hidden, text_information_uncovered, entry_message,
-                               label_path, label_path2)])
+                               text_information_hidden, text_information_uncovered, text_statistics,
+                               entry_message, label_path, label_path2)])
         button.grid(column=0, row=12, pady=10)
         label_info = tk.Label(self, text="FILES USED IN A STEGANOGRAPHY PROCESS MUST BE IN .PNG FORMAT.", font="Verdana 7 italic")
         label_info.grid(column=0, row=13, pady=10, padx=15)
@@ -364,8 +376,8 @@ class Cryptography(tk.Frame):
         entry_password_e = Entry(self, width=30, xscrollcommand=scrollbar.set, show="*")
         entry_password_e.grid(column=1, row=4, pady=10)
         text_information_encrypted = tk.Text(self, height=5, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
-        text_information_encrypted.config(state="disabled")
         text_information_encrypted.grid(column=0, row=6)
+        text_information_encrypted.config(state="disabled")
         label_mode_e = tk.Label(self, text="Choose an \n encryption mode: ", font="Verdana 9")
         label_mode_e.grid(column=0, row=5, sticky="W", padx=10)
         combo_mode_e = ttk.Combobox(self, state="readonly", values=["CBC", "CFB"])
@@ -391,6 +403,7 @@ class Cryptography(tk.Frame):
         entry_password_d.grid(column=1, row=10, pady=10)
         text_information_decrypted = tk.Text(self, height=5, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
         text_information_decrypted.grid(column=0, row=12)
+        text_information_decrypted.config(state="disabled")
         label_mode_d = tk.Label(self, text="Choose an \n encryption mode: ", font="Verdana 9")
         label_mode_d.grid(column=0, row=11, sticky="W", padx=10)
         combo_mode_d = ttk.Combobox(self, state="readonly", values=["CBC", "CFB"])

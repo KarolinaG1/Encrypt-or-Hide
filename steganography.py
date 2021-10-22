@@ -1,5 +1,6 @@
 import os.path
 import time
+from math import log10, sqrt
 
 import cv2
 import numpy
@@ -36,16 +37,29 @@ def get_data(image_path, secret):
 
         if secret_length > max_secret_length:
             print("You can't hide such message in this picture - it's too long")
-            bit_loss = None
+            return 111, False, 0, 100
         else:
             print("You can hide this message. Performing steganography...")
             bit_loss, output_path = hide_message(image, secret, image_path)
-        return bit_loss, output_path
-        print("You can hide this message. Performing steganography...")
-        bit_loss, output_path = hide_message(image, secret, image_path)
-        return bit_loss, output_path
+            # MSE and PSNR calculation
+            cover_im = cv2.imread(image_path)
+            stego_im = cv2.imread(output_path)
+            mse, psnr = MSE_PSNR(cover_im, stego_im)
+            print("MSE: " + str(mse))
+            print("PSNR: " + str(psnr))
+            return bit_loss, output_path, mse, psnr
     else:
-        return 111, False
+        return 111, False, 0, 100
+
+
+def MSE_PSNR(cover_file, stego_file):
+    # calculation of Mean Squared Error
+    mse = numpy.mean((cover_file - stego_file) ** 2)
+    if mse == 0:
+        return 0, 100
+    max_pixel_intensity = 255.0
+    psnr = 20 * log10(max_pixel_intensity/sqrt(mse))
+    return mse, psnr
 
 
 def hide_message(image, secret, original_path):
