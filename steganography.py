@@ -64,13 +64,11 @@ def MSE_PSNR(cover_file, stego_file):
 
 def hide_message(image, secret, original_path):
     # secret message preparation
-    print(type(secret))
     secret_bin = to_bin(secret)
-    print("Secret in bin " + str(secret_bin))
     print("Secret message to be hidden in binary form: " + secret_bin)
     secret_bin_len = len(secret_bin)
-    print("Length of length: " + str(bin(secret_bin_len)[2:]))
-    print("Length of the message in bits: " + str(secret_bin_len))
+    print("Length of length in binary form: " + str(bin(secret_bin_len)[2:]))
+    print("Length of the message in number of bits: " + str(secret_bin_len))
     secret_bin = bin(secret_bin_len)[2:] + to_bin("@#@#@") + secret_bin
     print("Length of delimiter: " + str(len(to_bin("@#@#@"))))
     print("Message with overload added: " + secret_bin)
@@ -83,7 +81,7 @@ def hide_message(image, secret, original_path):
 
     for i in range(height):
         for j in range(width):
-            # changing values of LSB in each RGB channel to secret message
+            # changing values of LSB in each RGB channel to a secret message
             # (if there's still data to be hidden)
             pixel = image[i, j]
             if bit_pointer < secret_bin_len:
