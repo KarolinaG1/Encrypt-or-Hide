@@ -1,3 +1,4 @@
+import math
 import os.path
 import time
 from math import log10, sqrt
@@ -60,6 +61,21 @@ def MSE_PSNR(cover_file, stego_file):
     max_pixel_intensity = 255.0
     psnr = 20 * log10(max_pixel_intensity/sqrt(mse))
     return mse, psnr
+
+
+def calculate_capacity(image_path):
+    cover_image = cv2.imread(image_path)
+    # get number of bits the image consists of
+    image_full_capacity = cover_image.shape[0] * cover_image.shape[1] * 3
+    image_cap = image_full_capacity - len(to_bin("@#@#@"))
+    length = 0
+    msg = image_cap
+    while (len(to_bin(image_cap))) > length:
+        length += 1
+        msg -= 1
+    capacity_ascii = msg // 16
+    capacity_ascii = math.floor(capacity_ascii)
+    return capacity_ascii
 
 
 def hide_message(image, secret, original_path):
@@ -129,7 +145,6 @@ def uncover_message(image_path):
         delimiter = to_bin("@#@#@")
         end_of_msg_len = lsb_all.find(delimiter)
         if end_of_msg_len != -1:
-            print(end_of_msg_len)
             msg_len_bin = lsb_all[0:end_of_msg_len]
             msg_len = int(msg_len_bin, 2)
             print("Length of the uncovered message: " + str(msg_len) + " bits")
@@ -143,3 +158,4 @@ def uncover_message(image_path):
             return False
     else:
         return False
+
