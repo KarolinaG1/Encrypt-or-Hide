@@ -16,6 +16,7 @@ class EncryptOrHideApp(tk.Tk):
         self.resizable(False, False)
         self.file_path1 = ''
         self.file_path2 = ''
+        self.file_path3 = ''
         self.password = ''
         self.password_d = ''
         self.message = ''
@@ -54,6 +55,9 @@ class EncryptOrHideApp(tk.Tk):
         self.file_path2 = askopenfilename(filetype=acceptable_types)
         label["text"] = ".../" + os.path.split(self.file_path2)[1]
 
+    def browse_files_h_f(self, text):
+        self.file_path3 = askopenfilename()
+
     def browse_files_e(self, label):
         acceptable_types = [('Digital images', '*.png;*.jpg;')]
         self.file_path1 = askopenfilename(filetype=acceptable_types)
@@ -63,6 +67,10 @@ class EncryptOrHideApp(tk.Tk):
         acceptable_types = [('Digital images', '*.png;*.jpg;')]
         self.file_path2 = askopenfilename(filetype=acceptable_types)
         label["text"] = ".../" + os.path.split(self.file_path2)[1]
+
+    def hide_f(self, text):
+        if self.file_path1 is not '' and self.file_path3 is not '':
+            steganography.get_data_f(self.file_path1, self.file_path3)
 
     def hide(self, message, info, file_info, en_flag, stat):
         info.config(state="normal")
@@ -117,7 +125,8 @@ class EncryptOrHideApp(tk.Tk):
         combo_mode_e.grid(column=0, row=3, sticky="E", padx=10)
         combo_mode_e.current(0)
         button_proceed = tk.Button(password_window, text="PROCEED", font="Verdana 10 bold",
-                                   command=lambda: self.encrypt_message(entry_password, file_info, info, password_window,
+                                   command=lambda: self.encrypt_message(entry_password, file_info, info,
+                                                                        password_window,
                                                                         message, combo_mode_e.get(), statistics))
         button_proceed.grid(column=1, row=3, pady=10)
 
@@ -187,6 +196,23 @@ class EncryptOrHideApp(tk.Tk):
             info.insert(tk.END, text)
             info["font"] = "Verdana 8 bold"
         info.config(state="disabled")
+
+    def uncover_f(self, info, label):
+        info.config(state="normal")
+        info.delete("1.0", tk.END)
+        uncovered_path = steganography.uncover_file(self.file_path2)
+        if uncovered_path is not False:
+            text = "Uncovered secret file was saved to: \n" + str(uncovered_path)
+            info.insert(tk.END, text)
+            self.file_path2 = ''
+            label["text"] = "No file has been chosen"
+        else:
+            text = "There seems to be no file \n hidden using this application.\n" \
+                   "Choose another image."
+            info.insert(tk.END, text)
+            info["font"] = "Verdana 8 bold"
+        info.config(state="disabled")
+
 
     def encrypt(self, password, info, label, mode):
         info.config(state="normal")
@@ -324,7 +350,7 @@ class Steganography(tk.Frame):
         # Hiding a message
         label_top = tk.Label(self, text="Hide a secret message in a digital image", font="Verdana 10 bold")
         label_top.grid(column=0, row=1, pady=20, padx=5, sticky="NW")
-        label_image = tk.Label(self, text="Choose an image", font="Verdana 10")
+        label_image = tk.Label(self, text="Choose a cover image", font="Verdana 10")
         label_image.grid(column=0, row=2, padx=10, sticky="W")
         text_path = tk.Text(self, height=3, width=40, font="Verdana 8 italic", bg="#F0F0F0", borderwidth=0)
         text_path.grid(column=0, row=3)
@@ -333,8 +359,14 @@ class Steganography(tk.Frame):
         button_search = tk.Button(self, text="Search", font="Verdana 8",
                                   command=lambda: controller.browse_files_h(text_path), width=15)
         button_search.grid(column=1, row=2, padx=10)
-        label_message = tk.Label(self, text="Type in your secret message: ", font="Verdana 10")
+        label_message = tk.Label(self, text="Type in your secret message:\n\n Or choose a file to be hidden: ",
+                                 font="Verdana 10")
         label_message.grid(column=0, row=4, padx=10, pady=10, sticky="W")
+        button_search_f = tk.Button(self, text="Search a secret file", font="Verdana 8",
+                                    command=lambda: controller.browse_files_h_f(text_path), width=15)
+        button_search_f.grid(column=0, row=5, sticky="W", padx=20)
+        button_hide_f = tk.Button(self, text="Hide a file", font="Verdana 10 bold", command=lambda: controller.hide_f(text_information_hidden))
+        button_hide_f.grid(column=0, row=5, sticky="E", padx=20)
         scrollbar = tk.Scrollbar(orient="horizontal")
         entry_message = Entry(self, width=30, xscrollcommand=scrollbar.set)
         entry_message.grid(column=1, row=4, pady=10)
@@ -342,7 +374,7 @@ class Steganography(tk.Frame):
         text_statistics.grid(column=1, row=6)
         text_statistics.config(state="disabled")
         text_information_hidden = tk.Text(self, height=7, width=40, font="Verdana 8 bold", bg="#F0F0F0", borderwidth=0)
-        text_information_hidden.grid(column=0, row=5)
+        # text_information_hidden.grid(column=0, row=5)
         text_information_hidden.config(state="disabled")
         button_hide = tk.Button(self, text="HIDE", font="Verdana 10 bold",
                                 command=lambda: controller.hide(entry_message, text_information_hidden, text_path,
@@ -378,6 +410,9 @@ class Steganography(tk.Frame):
                                           command=lambda: controller.uncover_cipher(text_information_uncovered,
                                                                                     label_path2))
         button_uncover_cipher.grid(column=1, row=10, sticky="E", pady=5)
+        button_uncover_f = tk.Button(self, text="UNCOVER FILE", font="Verdana 10 bold",
+                                   command=lambda: controller.uncover_f(text_information_uncovered, label_path2))
+        button_uncover_f.grid(column=1, row=10, pady=10)
         label_info_hiding = tk.Label(self, text="If you want to uncover an encrypted message - press\n"
                                                 "'UNCOVER CRYPTOGRAM' button", font="Verdana 8 italic",
                                      fg='blue')
