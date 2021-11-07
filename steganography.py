@@ -63,7 +63,7 @@ def get_data_f(cover_image, secret_file):
         file_ex_bin = to_bin(file_extension)
         cover_capacity = (cover.shape[0] * cover.shape[1] * 3) - len(to_bin("@#@#@")) - len(to_bin(len(secret_bin))) \
                          - len(to_bin("$$$$$")) - len(file_ex_bin)
-        if cover_capacity >= len(secret):
+        if cover_capacity >= len(secret_bin):
             print("You can hide this file in a chosen cover image. Performing steganography...")
             bit_loss, output_path = hide_message(cover, secret_bin, cover_image, file_ex_bin)
             cover_im = cv2.imread(cover_image)
@@ -78,7 +78,7 @@ def get_data_f(cover_image, secret_file):
 
 
 def MSE_PSNR(cover_file, stego_file):
-    # calculation of Mean Squared Error
+    # calculation of Mean Squared Error and Peak Signal to Noise Ratio
     mse = numpy.mean((cover_file - stego_file) ** 2)
     if mse == 0:
         return 0, 100
@@ -106,27 +106,14 @@ def hide_message(image, secret, original_path, file_extension):
     # secret message preparation
     if file_extension is not None:
         secret_bin = secret
-        print("Secret message to be hidden in binary form: " + secret_bin)
         secret_bin_len = len(secret_bin)
-        print("Length of length in binary form: " + str(bin(secret_bin_len)[2:]))
-        print("Length of the message in number of bits: " + str(secret_bin_len))
         secret_bin = bin(secret_bin_len)[2:] + to_bin("@#@#@") + secret_bin + file_extension + to_bin("$$$$$")
-        print("Length of delimiter: " + str(len(to_bin("@#@#@"))))
-        print("Length of second delimiter: " + str(len(to_bin("$$$$$"))))
-        print("Message with overload added: " + secret_bin)
         secret_bin_len = len(secret_bin)
-        print("Length of the final secret: " + str(secret_bin_len))
     else:
         secret_bin = to_bin(secret)
-        print("Secret message to be hidden in binary form: " + secret_bin)
         secret_bin_len = len(secret_bin)
-        print("Length of length in binary form: " + str(bin(secret_bin_len)[2:]))
-        print("Length of the message in number of bits: " + str(secret_bin_len))
         secret_bin = bin(secret_bin_len)[2:] + to_bin("@#@#@") + secret_bin
-        print("Length of delimiter: " + str(len(to_bin("@#@#@"))))
-        print("Message with overload added: " + secret_bin)
         secret_bin_len = len(secret_bin)
-        print("Length of the final secret: " + str(secret_bin_len))
 
     height, width = image.shape[0], image.shape[1]
     capacity = height * width * 3
@@ -155,9 +142,9 @@ def hide_message(image, secret, original_path, file_extension):
             if bit_pointer >= secret_bin_len:
                 break
 
-    output_path = os.path.splitext(original_path)[0]
+    output_path = os.path.dirname(original_path)
     extension = os.path.splitext(original_path)[1]
-    output_path = output_path + "_secret_" + time.strftime("%d-%m-%Y-%H-%M-%S") + extension
+    output_path = output_path + "/secret_" + time.strftime("%d-%m-%Y-%H-%M-%S") + extension
     cv2.imwrite(output_path, image)
     # calculating percentage of data loss as bits of the image that need to be modified to store the message
     loss_percentage = (secret_bin_len / capacity) * 100
@@ -184,11 +171,9 @@ def uncover_message(image_path):
         if end_of_msg_len != -1:
             msg_len_bin = lsb_all[0:end_of_msg_len]
             msg_len = int(msg_len_bin, 2)
-            print("Length of the uncovered message: " + str(msg_len) + " bits")
             start_of_msg_pointer = end_of_msg_len + len(delimiter)
             end_of_msg_pointer = start_of_msg_pointer + msg_len
             message = lsb_all[start_of_msg_pointer:end_of_msg_pointer]
-            print("Message in bin: " + str(message))
             try:
                 uncovered_message = to_ascii(message)
             except Exception:
@@ -222,15 +207,15 @@ def uncover_file(image_path):
         if end_of_msg_len != -1:
             msg_len_bin = lsb_all[0:end_of_msg_len]
             msg_len = int(msg_len_bin, 2)
-            print("Length of the uncovered message: " + str(msg_len) + " bits")
             start_of_msg_pointer = end_of_msg_len + len(delimiter)
             end_of_msg_pointer = start_of_msg_pointer + msg_len
             message = lsb_all[start_of_msg_pointer:end_of_msg_pointer]
-            print("Message in bin: " + str(message))
             extension = lsb_all[end_of_msg_pointer:end_of_ext_len]
-            print("File extension is: " + str(to_ascii(extension)))
-            output_path = os.path.splitext(image_path)[0]
-            fname = output_path + "_uncovered" + to_ascii(extension)
+            output_path = os.path.dirname(image_path)
+            try:
+                fname = output_path + "/uncovered_" + time.strftime("%d-%m-%Y-%H-%M-%S") + to_ascii(extension)
+            except UnicodeDecodeError:
+                return False
             message = str.encode(message)
             message = int(message, 2).to_bytes((len(message) + 7) // 8, 'big')
             with open(fname, 'wb') as f:
@@ -239,7 +224,7 @@ def uncover_file(image_path):
                 except ValueError:
                     return False
                 f.close()
-                return fname
+                return fname.split("/")[-1]
         else:
             return False
     else:

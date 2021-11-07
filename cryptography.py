@@ -34,8 +34,10 @@ def get_data(image_path, password):
     image_file.close()
 
     # key preparation
-    salt = b'An exemplary salt'             # additional security measure of a password
-    key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
+    # additional security measure of a password
+    salt = b'An exemplary salt'
+    # generating a key value from a given password and salt of size 32 bytes through 1000 iterations
+    key = PBKDF2(password, salt, 32, 1000)
     return plaintext, key, image_path
 
 
@@ -51,7 +53,6 @@ def encrypt_CFB(plaintext, key, im_path):
         f.write(img_data)
         f.close()
         return fname
-    return False
 
 
 def decrypt_CFB(cipher, password):
@@ -60,9 +61,9 @@ def decrypt_CFB(cipher, password):
         ciph = f.read()
         f.close()
     # Prepare data
-    salt = b'An exemplary salt'             # additional security measure for a password
-    key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
-    iv = key[:16]                           # extracting iv from the last 16 bytes of key
+    salt = b'An exemplary salt'
+    key = PBKDF2(password, salt, 32, 1000)
+    iv = key[:16]
     decipher = AES.new(key, AES.MODE_CFB, iv)
     try:
         uncovered_data = decipher.decrypt(ciph)
@@ -70,7 +71,7 @@ def decrypt_CFB(cipher, password):
         return False
     output_path = os.path.splitext(cipher)[0]
     extension = os.path.splitext(cipher)[1]
-    fname = output_path + "_decrypted_" + extension
+    fname = output_path + "_decrypted" + extension
     with open(fname, 'wb') as f:
         try:
             f.write(uncovered_data)
@@ -92,7 +93,6 @@ def encrypt_CBC(plaintext, key, im_path):
         f.write(img_data)
         f.close()
         return fname
-    return False
 
 
 def decrypt_CBC(cipher, password):
@@ -101,8 +101,8 @@ def decrypt_CBC(cipher, password):
         ciph = f.read()
         f.close()
     # Prepare data
-    salt = b'An exemplary salt'             # additional security measure of a password
-    key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
+    salt = b'An exemplary salt'
+    key = PBKDF2(password, salt, 32, 1000)
     iv = key[:16]
     decipher = AES.new(key, AES.MODE_CBC, iv)
     try:
@@ -111,8 +111,7 @@ def decrypt_CBC(cipher, password):
         return False
     output_path = os.path.splitext(cipher)[0]
     extension = os.path.splitext(cipher)[1]
-    fname = output_path + "_decrypted_" + extension
-
+    fname = output_path + "_decrypted" + extension
     with open(fname, 'wb') as f:
         try:
             f.write(unpad(uncovered_data, 16))
@@ -126,9 +125,9 @@ def encrypt_text(plaintext, password, mode):
     # AES encryption process of text in CFB or CBC mode
 
     # key preparation
-    salt = b'An exemplary salt'             # additional security measure of a password
-    key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
-    iv = key[:16]                           # initialization vector derived from a key
+    salt = b'An exemplary salt'
+    key = PBKDF2(password, salt, 32, 1000)
+    iv = key[:16]
     if mode == "CBC":
         cipher = AES.new(key, AES.MODE_CBC, iv)
         cryptogram = cipher.encrypt(pad(plaintext, 16))
@@ -144,9 +143,9 @@ def decrypt_text(cryptogram, password, mode):
     # AES decryption process of text in CFB or CBC mode
 
     # key preparation
-    salt = b'An exemplary salt'             # additional security measure of a password
-    key = PBKDF2(password, salt, 32, 1000)  # generating a key value from given password and salt of size 32 bytes through 1000 iterations
-    iv = key[:16]                           # initialization vector derived from a key
+    salt = b'An exemplary salt'
+    key = PBKDF2(password, salt, 32, 1000)
+    iv = key[:16]
     if mode == "CBC":
         decipher = AES.new(key, AES.MODE_CBC, iv)
         try:
