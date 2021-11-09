@@ -43,7 +43,7 @@ def get_data(image_path, password):
 
 def encrypt_CFB(plaintext, key, im_path):
     # AES encryption process in CFB mode
-    iv = key[:16]                           # get initialization vector derived from a key
+    iv = key[:16]                  # get initialization vector derived from a key
     cipher = AES.new(key, AES.MODE_CFB, iv)
     img_data = cipher.encrypt(plaintext)
     output_path = os.path.splitext(im_path)[0]
@@ -60,7 +60,7 @@ def decrypt_CFB(cipher, password):
     with open(cipher, 'rb') as f:
         ciph = f.read()
         f.close()
-    # Prepare data
+    # data preparation
     salt = b'An exemplary salt'
     key = PBKDF2(password, salt, 32, 1000)
     iv = key[:16]
@@ -83,7 +83,7 @@ def decrypt_CFB(cipher, password):
 
 def encrypt_CBC(plaintext, key, im_path):
     # AES encryption process in CBC mode
-    iv = key[:16]                           # extracting iv from the last 16 bytes of key
+    iv = key[:16]                   # extracting iv from the last 16 bytes of key
     cipher = AES.new(key, AES.MODE_CBC, iv)
     img_data = cipher.encrypt(pad(plaintext, 16))
     output_path = os.path.splitext(im_path)[0]
@@ -100,7 +100,7 @@ def decrypt_CBC(cipher, password):
     with open(cipher, 'rb') as f:
         ciph = f.read()
         f.close()
-    # Prepare data
+    # data preparation
     salt = b'An exemplary salt'
     key = PBKDF2(password, salt, 32, 1000)
     iv = key[:16]
@@ -128,6 +128,7 @@ def encrypt_text(plaintext, password, mode):
     salt = b'An exemplary salt'
     key = PBKDF2(password, salt, 32, 1000)
     iv = key[:16]
+    # encryption process
     if mode == "CBC":
         cipher = AES.new(key, AES.MODE_CBC, iv)
         cryptogram = cipher.encrypt(pad(plaintext, 16))
@@ -146,6 +147,8 @@ def decrypt_text(cryptogram, password, mode):
     salt = b'An exemplary salt'
     key = PBKDF2(password, salt, 32, 1000)
     iv = key[:16]
+
+    # decryption process
     if mode == "CBC":
         decipher = AES.new(key, AES.MODE_CBC, iv)
         try:

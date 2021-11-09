@@ -26,8 +26,8 @@ class EncryptOrHideApp(tk.Tk):
         self.back_label = tk.PhotoImage(file="images/background_l.png")
         self.locked = tk.PhotoImage(file="images/lock.png")
         self.unlocked = tk.PhotoImage(file="images/unlock.png")
-        self.hiding = tk.PhotoImage(file="images/sh.png")
-        self.uncovering = tk.PhotoImage(file="images/unsh.png")
+        self.hiding = tk.PhotoImage(file="images/secret.png")
+        self.uncovering = tk.PhotoImage(file="images/unsecret.png")
         self.info = tk.PhotoImage(file="images/info.png")
 
         container = tk.Frame(self)
@@ -63,15 +63,15 @@ class EncryptOrHideApp(tk.Tk):
         text_menu_info.config(state="disabled")
         text_menu_info.pack()
 
-
     def browse_files_h(self, text):
         acceptable_types = [('Digital images', '*.png;')]
         self.file_path1 = askopenfilename(filetype=acceptable_types)
-        cover_im_capacity = steganography.calculate_capacity(self.file_path1)
+        text_capacity, file_capacity = steganography.calculate_capacity(self.file_path1)
         text.config(state="normal")
         text.delete("1.0", tk.END)
-        info = "You can hide a message with a max\n length" \
-               " of " + str(cover_im_capacity) + " characters \nusing this cover image"
+        info = "You can hide a plain message with a \nmax length " \
+               "of " + str(text_capacity) + " characters or a\nfile with a max size of " + \
+               str(file_capacity) + " bytes"
         text.insert(tk.END, info)
 
     def browse_files_r(self, label):

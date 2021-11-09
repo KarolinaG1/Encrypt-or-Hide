@@ -20,7 +20,7 @@ def to_bin(data):
 
 
 def to_ascii(binary_data):
-    # converting binary data to ascii representation
+    # converting binary data to their ascii representation
     data_int = int(binary_data, 2)
     byte_nr = (data_int.bit_length() + 7) // 8
     data_bytes = data_int.to_bytes(byte_nr, 'big')
@@ -56,13 +56,12 @@ def get_data_f(cover_image, secret_file):
     secret = open(secret_file, "rb")
     file_extension = os.path.splitext(secret_file)[1]
     if cover is not None and secret is not None:
-        print(type(cover))
-        print(cover)
         secret = to_bin(secret.read())
         secret_bin = ''.join(secret)
         file_ex_bin = to_bin(file_extension)
         cover_capacity = (cover.shape[0] * cover.shape[1] * 3) - len(to_bin("@#@#@")) - len(to_bin(len(secret_bin))) \
                          - len(to_bin("$$$$$")) - len(file_ex_bin)
+        print("Len of file ex: " + str(len(file_ex_bin)))
         if cover_capacity >= len(secret_bin):
             print("You can hide this file in a chosen cover image. Performing steganography...")
             bit_loss, output_path = hide_message(cover, secret_bin, cover_image, file_ex_bin)
@@ -91,15 +90,25 @@ def calculate_capacity(image_path):
     cover_image = cv2.imread(image_path)
     # get number of bits the image consists of
     image_full_capacity = cover_image.shape[0] * cover_image.shape[1] * 3
+    # secret text capacity calculation
     image_cap = image_full_capacity - len(to_bin("@#@#@"))
     length = 0
     msg = image_cap
     while (len(to_bin(image_cap))) > length:
         length += 1
         msg -= 1
-    capacity_ascii = msg // 16
+    capacity_ascii = msg // 16  # worst-case scenario -- all-polish-characters
     capacity_ascii = math.floor(capacity_ascii)
-    return capacity_ascii
+    # secret file capacity calculation
+    image_cap = image_cap - len(to_bin("$$$$$")) - 40   # worst-case scenario -- file extension of 5 characters length
+    length = 0
+    msg = image_cap
+    while (len(to_bin(image_cap))) > length:
+        length += 1
+        msg -= 1
+    capacity_file = msg // 8    # bin-to-byte conversion
+
+    return capacity_ascii, capacity_file
 
 
 def hide_message(image, secret, original_path, file_extension):
