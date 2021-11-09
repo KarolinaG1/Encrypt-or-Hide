@@ -9,5 +9,5 @@ The first option (**steganography**) uses .png files as cover-image to hide (and
 When encrypting either text or image, the encryption mode can be chosen by the user. Two available modes are CFB and CBC.
 When performing embedding of the message, statistics of the process are given. Information includes: percentage of bits changed in the process and PSNR and MSE values as indicators of the severity of changes made to the cover image.
 
-**All images by *rawpixel.com* and by self-creation.**</br>
+**All images by *[rawpixel.com](https://www.rawpixel.com/)* and by self-creation.**</br>
 Application made by Karolina Głowińska as part of an engineering thesis at AGH University of Science and Technology.
