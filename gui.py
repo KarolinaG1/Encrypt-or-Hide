@@ -73,8 +73,9 @@ class EncryptOrHideApp(tk.Tk):
                "of " + str(text_capacity) + " characters or a\nfile with a max size of " + \
                str(file_capacity) + " bytes"
         text.insert(tk.END, info)
+        text.config(state="disabled")
 
-    def browse_files_r(self, label):
+    def browse_files_u(self, label):
         acceptable_types = [('Digital images', '*.png;')]
         self.file_path2 = askopenfilename(filetype=acceptable_types)
         label["text"] = ".../" + os.path.split(self.file_path2)[1]
@@ -105,15 +106,16 @@ class EncryptOrHideApp(tk.Tk):
                 text = "Steganographic process completed. \
                                \nThe output file: \n" + output.split("/")[-1]
                 info.insert(tk.END, text)
-                stats = "Embedding statistics: \nPSNR: " + str(round(psnr, 4)) + "dB" + "\nMSE: " + str(
-                    round(mse, 4)) + "dB" + "\nBits modified: " + str(round(self.loss, 4)) + "%"
+                stats = "Embedding statistics: \nPSNR: " + str(round(psnr, 4)) + " dB" + "\nMSE: " + str(
+                    round(mse, 4)) + " dB" + "\nLSBs modified: " + str(round(self.loss, 2)) + "%"
                 stat.insert(tk.END, stats)
                 self.loss = 111
                 self.file_path1 = ''
                 self.file_path3 = ''
                 file_info.insert(tk.END, "No file has been chosen")
             else:
-                text = "Looks like the chosen cover image\ndoesn't have the required  \ncapacity to perform this operation. "
+                text = "Looks like the chosen cover image\ndoesn't have the required  " \
+                       "\ncapacity to perform this operation. "
                 info.insert(tk.END, text)
 
         else:
@@ -141,8 +143,8 @@ class EncryptOrHideApp(tk.Tk):
                 text = "Steganographic process completed. \
                                \nThe output file: \n" + output.split("/")[-1]
                 info.insert(tk.END, text)
-                stats = "Embedding statistics: \nPSNR: " + str(round(psnr, 4)) + "dB" + "\nMSE: " + str(
-                    round(mse, 4)) + "dB" + "\nBits modified: " + str(round(self.loss, 4)) + "%"
+                stats = "Embedding statistics: \nPSNR: " + str(round(psnr, 4)) + " dB" + "\nMSE: " + str(
+                    round(mse, 4)) + " dB" + "\nLSBs modified: " + str(round(self.loss, 2)) + "%"
                 stat.insert(tk.END, stats)
                 self.loss = 111
                 self.file_path1 = ''
@@ -372,12 +374,6 @@ class EncryptOrHideApp(tk.Tk):
         text4.delete("1.0", tk.END)
         text4.config(state="disabled")
 
-    def limit_input(self, message, capacity):
-        if len(message) <= capacity:
-            return True
-        else:
-            return False
-
 
 class Menu(tk.Frame):
 
@@ -393,16 +389,16 @@ class Menu(tk.Frame):
         button_info.place(x=540, y=3)
 
         label = tk.Label(self, text="What do you want to do?",
-                         font="Averta 20 bold", bg='black', fg='white', image=controller.back_label, compound='center', borderwidth=0)
+                         font="Averta 20 bold", bg='black', fg='white', image=controller.back_label,
+                         compound='center', borderwidth=0)
         label.pack(side="top", fill="x", pady=120)
 
         button_stegano = tk.Button(self, text="Hide/Uncover \n a message \n(steganography)", width=30,
-                                   font="Averta 13",
-                                   command=lambda: controller.show_window("Steganography"), fg='black', bg='white')
+                                   font="Averta 13", fg='black', bg='white',
+                                   command=lambda: controller.show_window("Steganography"))
         button_crypto = tk.Button(self, text="Encrypt/Decrypt \n an image \n(cryptography)",
-                                  width=30, font="Averta 13",
-                                  command=lambda: controller.show_window("Cryptography"), fg='black', bg='white')
-
+                                  width=30, font="Averta 13", fg='black', bg='white',
+                                  command=lambda: controller.show_window("Cryptography"))
         button_stegano.pack(pady="5")
         button_crypto.pack(pady="5")
         controller.reset_values()
@@ -442,7 +438,7 @@ class Steganography(tk.Frame):
         scrollbar = tk.Scrollbar(orient="horizontal")
         entry_message = Entry(self, width=30, xscrollcommand=scrollbar.set)
         entry_message.grid(column=0, row=5, pady=10, padx=5, sticky="E")
-        text_statistics = tk.Text(self, height=4, width=20, font="Cardo 8 bold", bg="white", borderwidth=0)
+        text_statistics = tk.Text(self, height=4, width=22, font="Cardo 8 bold", bg="white", borderwidth=0)
         text_statistics.grid(column=1, row=2, rowspan=2)
         text_statistics.config(state="disabled")
         text_information_hidden = tk.Text(self, height=5, width=40, font="Cardo 7 bold", bg="white", borderwidth=0)
@@ -468,11 +464,11 @@ class Steganography(tk.Frame):
         label_path2 = tk.Label(self, text="No file has been chosen", font="Cardo 7 italic", bg="white")
         label_path2.grid(column=0, row=9, sticky="NW", padx=5, pady=10)
         button_search2 = tk.Button(self, text="Search", font="Cardo 8 bold", bg="white",
-                                   command=lambda: controller.browse_files_r(label_path2), width=15)
+                                   command=lambda: controller.browse_files_u(label_path2), width=15)
         button_search2.grid(column=0, row=8, sticky="E", padx=50)
-        text_information_uncovered = tk.Text(self, height=7, width=60, font="Cardo 8 bold", bg="white",
+        text_information_uncovered = tk.Text(self, height=7, width=30, font="Cardo 8 bold", bg="white",
                                              borderwidth=0)
-        text_information_uncovered.grid(column=0, row=9, sticky="E", pady=10, padx=10, columnspan=2)
+        text_information_uncovered.grid(column=0, row=9, sticky="E", pady=10, padx=1, columnspan=1)
         text_information_uncovered.config(state="disabled")
         button_uncover = tk.Button(self, text="UNCOVER A\nPLAIN MESSAGE", font="Cardo 10 bold", bg="black", fg="white",
                                    command=lambda: controller.uncover(text_information_uncovered, label_path2))

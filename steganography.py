@@ -31,10 +31,9 @@ def to_ascii(binary_data):
 def get_data(image_path, secret):
     image = cv2.imread(image_path)
     if image is not None:
-        max_secret_length = image.shape[0] * image.shape[1] * 3 // 8  # in bytes
-        secret_length = len(secret.encode('utf-8'))
-
-        if secret_length > max_secret_length:
+        secret_length = len(to_bin(secret))
+        cover_capacity = (image.shape[0] * image.shape[1] * 3) - len(to_bin("@#@#@")) - len(to_bin(len(to_bin(secret))))
+        if secret_length > cover_capacity:
             print("You can't hide such message in this picture - it's too long")
             return 111, False, 0, 100
         else:
