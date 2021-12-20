@@ -43,8 +43,6 @@ def get_data(image_path, secret):
             cover_im = cv2.imread(image_path)
             stego_im = cv2.imread(output_path)
             mse, psnr = MSE_PSNR(cover_im, stego_im)
-            print("MSE: " + str(mse))
-            print("PSNR: " + str(psnr))
             return bit_loss, output_path, mse, psnr
     else:
         return 111, False, 0, 100
@@ -67,8 +65,6 @@ def get_data_f(cover_image, secret_file):
             cover_im = cv2.imread(cover_image)
             stego_im = cv2.imread(output_path)
             mse, psnr = MSE_PSNR(cover_im, stego_im)
-            print("MSE: " + str(mse))
-            print("PSNR: " + str(psnr))
             return bit_loss, output_path, mse, psnr
         else:
             print("You can't hide this file in a chosen cover image.")
@@ -182,9 +178,11 @@ def uncover_message(image_path):
             start_of_msg_pointer = end_of_msg_len + len(delimiter)
             end_of_msg_pointer = start_of_msg_pointer + msg_len
             message = lsb_all[start_of_msg_pointer:end_of_msg_pointer]
+            print(msg_len)
             try:
                 uncovered_message = to_ascii(message)
             except Exception:
+                print("EXCEPTION")
                 return False
             return uncovered_message
         else:

@@ -51,13 +51,13 @@ class EncryptOrHideApp(tk.Tk):
     def show_info(self):
         info_window = Toplevel(self)
         info_window.title("About the application")
-        info_window.geometry("420x420")
+        info_window.geometry("430x430")
         info_window.configure(background="black")
         info_window.iconbitmap("images/icon.ico")
         info_window.resizable(False, False)
         with open('description', encoding="utf-8") as f:
             info = f.read()
-        text_menu_info = tk.Text(info_window, height=30, width=60, font="Cardo 10", bg="black", borderwidth=0,
+        text_menu_info = tk.Text(info_window, height=35, width=60, font="Cardo 10", bg="black", borderwidth=0,
                                  wrap=tk.WORD, pady=15, fg="white")
         text_menu_info.insert(tk.END, info)
         text_menu_info.config(state="disabled")
@@ -66,14 +66,17 @@ class EncryptOrHideApp(tk.Tk):
     def browse_files_h(self, text):
         acceptable_types = [('Digital images', '*.png;')]
         self.file_path1 = askopenfilename(filetype=acceptable_types)
-        text_capacity, file_capacity = steganography.calculate_capacity(self.file_path1)
-        text.config(state="normal")
-        text.delete("1.0", tk.END)
-        info = "You can hide a plain message with a \nmax length " \
-               "of " + str(text_capacity) + " characters or a\nfile with a max size of " + \
-               str(file_capacity) + " bytes"
-        text.insert(tk.END, info)
-        text.config(state="disabled")
+        try:
+            text_capacity, file_capacity = steganography.calculate_capacity(self.file_path1)
+            text.config(state="normal")
+            text.delete("1.0", tk.END)
+            info = "You can hide a plain message with a \nmax length " \
+                   "of " + str(text_capacity) + " characters or a\nfile with a max size of " + \
+                   str(file_capacity) + " bytes"
+            text.insert(tk.END, info)
+            text.config(state="disabled")
+        except Exception:                   # when no file was chosen
+            pass
 
     def browse_files_u(self, label):
         acceptable_types = [('Digital images', '*.png;')]
@@ -100,14 +103,14 @@ class EncryptOrHideApp(tk.Tk):
         stat.delete("1.0", tk.END)
         file_info.config(state="normal")
         file_info.delete("1.0", tk.END)
-        if self.file_path1 is not '' and self.file_path3 is not '':
+        if self.file_path1 != '' and self.file_path3 != '':
             self.loss, output, mse, psnr = steganography.get_data_f(self.file_path1, self.file_path3)
             if self.loss != 111 and output is not False:
                 text = "Steganographic process completed. \
                                \nThe output file: \n" + output.split("/")[-1]
                 info.insert(tk.END, text)
                 stats = "Embedding statistics: \nPSNR: " + str(round(psnr, 4)) + " dB" + "\nMSE: " + str(
-                    round(mse, 4)) + " dB" + "\nLSBs modified: " + str(round(self.loss, 2)) + "%"
+                    round(mse, 4)) + "\nLSBs modified: " + str(round(self.loss, 2)) + "%"
                 stat.insert(tk.END, stats)
                 self.loss = 111
                 self.file_path1 = ''
@@ -136,7 +139,7 @@ class EncryptOrHideApp(tk.Tk):
             self.message = str(message.get())
         else:
             self.message = self.message.decode('latin-1')
-        if self.message is not '' and self.file_path1 is not '':
+        if self.message != '' and self.file_path1 != '':
             self.loss, output, mse, psnr = steganography.get_data(self.file_path1, self.message)
             self.message = ''
             if self.loss != 111 and output is not False:
@@ -144,7 +147,7 @@ class EncryptOrHideApp(tk.Tk):
                                \nThe output file: \n" + output.split("/")[-1]
                 info.insert(tk.END, text)
                 stats = "Embedding statistics: \nPSNR: " + str(round(psnr, 4)) + " dB" + "\nMSE: " + str(
-                    round(mse, 4)) + " dB" + "\nLSBs modified: " + str(round(self.loss, 2)) + "%"
+                    round(mse, 4)) + "\nLSBs modified: " + str(round(self.loss, 2)) + "%"
                 stat.insert(tk.END, stats)
                 self.loss = 111
                 self.file_path1 = ''
@@ -285,7 +288,7 @@ class EncryptOrHideApp(tk.Tk):
         info.config(state="normal")
         info.delete('1.0', tk.END)
         self.password = str(password.get())
-        if self.password is not '' and self.file_path1 is not '':
+        if self.password != '' and self.file_path1 != '':
             p, k, im = cryptography.get_data(self.file_path1, self.password)
             if mode == 'CBC':
                 output = cryptography.encrypt_CBC(p, k, im)
@@ -313,7 +316,7 @@ class EncryptOrHideApp(tk.Tk):
         info.config(state="normal")
         info.delete('1.0', tk.END)
         self.password_d = str(password.get())
-        if self.password_d is not '' and self.file_path2 is not '':
+        if self.password_d != '' and self.file_path2 != '':
             if mode == 'CBC':
                 output = cryptography.decrypt_CBC(self.file_path2, self.password_d)
             elif mode == 'CFB':

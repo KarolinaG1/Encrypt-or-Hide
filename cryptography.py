@@ -55,9 +55,9 @@ def encrypt_CFB(plaintext, key, im_path):
         return fname
 
 
-def decrypt_CFB(cipher, password):
+def decrypt_CFB(ciphertext, password):
     # AES decryption process in CFB mode
-    with open(cipher, 'rb') as f:
+    with open(ciphertext, 'rb') as f:
         ciph = f.read()
         f.close()
     # data preparation
@@ -69,8 +69,8 @@ def decrypt_CFB(cipher, password):
         uncovered_data = decipher.decrypt(ciph)
     except ValueError:
         return False
-    output_path = os.path.splitext(cipher)[0]
-    extension = os.path.splitext(cipher)[1]
+    output_path = os.path.splitext(ciphertext)[0]
+    extension = os.path.splitext(ciphertext)[1]
     fname = output_path + "_decrypted" + extension
     with open(fname, 'wb') as f:
         try:
@@ -95,9 +95,9 @@ def encrypt_CBC(plaintext, key, im_path):
         return fname
 
 
-def decrypt_CBC(cipher, password):
+def decrypt_CBC(ciphertext, password):
     # AES decryption process in CBC mode
-    with open(cipher, 'rb') as f:
+    with open(ciphertext, 'rb') as f:
         ciph = f.read()
         f.close()
     # data preparation
@@ -109,8 +109,8 @@ def decrypt_CBC(cipher, password):
         uncovered_data = decipher.decrypt(ciph)
     except ValueError:
         return False
-    output_path = os.path.splitext(cipher)[0]
-    extension = os.path.splitext(cipher)[1]
+    output_path = os.path.splitext(ciphertext)[0]
+    extension = os.path.splitext(ciphertext)[1]
     fname = output_path + "_decrypted" + extension
     with open(fname, 'wb') as f:
         try:
